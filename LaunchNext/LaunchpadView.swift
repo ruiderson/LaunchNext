@@ -57,6 +57,7 @@ struct LaunchpadView: View {
     @State private var currentIconSize: CGFloat = 0
     @State private var headerTotalHeight: CGFloat = 0
     
+    
     // 性能优化：使用静态缓存避免状态修改问题
     private static var geometryCache: [String: CGPoint] = [:]
     private static var lastGeometryUpdate: Date = Date.distantPast
@@ -205,7 +206,7 @@ struct LaunchpadView: View {
                     }
                     .padding(.vertical, 10)
                     .padding(.horizontal, 12)
-                    .glassEffect(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
@@ -466,7 +467,7 @@ struct LaunchpadView: View {
             .padding(.horizontal, actualHorizontalPadding)
         }
         .padding()
-        .glassEffect(in: RoundedRectangle(cornerRadius: appStore.isFullscreenMode ? 0 : 30))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: appStore.isFullscreenMode ? 0 : 30))
         .background(
             appStore.isFullscreenMode
                 ? Color.black.opacity(backdropOpacity)
@@ -1723,7 +1724,7 @@ struct DragPreviewItem: View {
                     RoundedRectangle(cornerRadius: iconSize * 0.2)
                         .foregroundStyle(Color.clear)
                         .frame(width: iconSize * 0.8, height: iconSize * 0.8)
-                        .glassEffect(in: RoundedRectangle(cornerRadius: iconSize * 0.2))
+                        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: iconSize * 0.2))
                         .shadow(radius: 2)
                         .overlay(
                             RoundedRectangle(cornerRadius: iconSize * 0.2)

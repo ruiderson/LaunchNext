@@ -58,7 +58,7 @@ struct FolderView: View {
             }
         }
         .padding()
-        .glassEffect(in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)

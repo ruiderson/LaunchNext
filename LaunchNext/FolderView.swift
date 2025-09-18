@@ -58,7 +58,11 @@ struct FolderView: View {
             }
         }
         .padding()
-        .glassEffect(in: RoundedRectangle(cornerRadius: 30))
+        .glassEffect(in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
         .transition(LNAnimations.folderOpenTransition)
         .onTapGesture {
             // 当点击文件夹视图的非编辑区域时，如果正在编辑名称，则退出编辑模式

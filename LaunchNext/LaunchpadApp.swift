@@ -172,8 +172,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
     
     private func calculateContentRect(for screen: NSScreen) -> NSRect {
         let frame = screen.visibleFrame
-        let width = max(frame.width * 0.4, minimumContentSize.width, minimumContentSize.height * 4/3)
-        let height = width * 3/4
+        
+        let height = frame.height * 0.7
+        let width = max(height, minimumContentSize.width, minimumContentSize.height * 4/3)
+        
         return NSRect(x: frame.midX - width/2, y: frame.midY - height/2, width: width, height: height)
     }
     

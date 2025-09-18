@@ -81,8 +81,8 @@ final class LocalizationManager {
     private init() {
         translations = [
             .english: [
-                .noAppsFound: "No apps found",
-                .searchPlaceholder: "Search",
+                .noAppsFound: "Nenhum aplicativo encontrado",
+                .searchPlaceholder: "Pesquisar",
                 .appTitle: "LaunchNext",
                 .modifiedFrom: "Modified from LaunchNow version 1.3.1",
                 .backgroundHint: "Automatically run on background: add LaunchNext to dock or use keyboard shortcuts to open the application window",

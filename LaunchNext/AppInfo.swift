@@ -82,6 +82,15 @@ struct AppInfo: Identifiable, Equatable, Hashable {
         }
 
         consider(FileManager.default.displayName(atPath: url.path), source: "FileManager.displayName")
+        
+        switch fallbackName {
+        case "Safari":
+            return fallbackName
+        case "Outlook":
+            return fallbackName
+        default:
+            break
+        }
 
         return resolvedName ?? fallbackName
     }

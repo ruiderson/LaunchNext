@@ -198,7 +198,7 @@ struct LaunchpadView: View {
                         TextField(appStore.localized(.searchPlaceholder), text: $appStore.searchText)
                             .textFieldStyle(.plain)
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 10)
                     .padding(.horizontal, 12)
                     .glassEffect(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
@@ -223,6 +223,7 @@ struct LaunchpadView: View {
                     }
                     .focused($isSearchFieldFocused)
                     .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
 
                     HStack {
                         Spacer()
@@ -239,7 +240,6 @@ struct LaunchpadView: View {
                         }
                     }
                 }
-                .padding(.top)
                 .padding(.horizontal)
                 .background(
                     GeometryReader { proxy in
@@ -261,7 +261,8 @@ struct LaunchpadView: View {
                 
                 Divider()
                     .foregroundStyle(.placeholder)
-                    .padding()
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
                     .opacity(isFolderOpen ? 0.1 : 1)
                 
                 GeometryReader { geo in
@@ -433,7 +434,7 @@ struct LaunchpadView: View {
                 
                 // Merged PageIndicator - add tap to jump to page
                 if pages.count > 1 {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 18) {
                         ForEach(0..<pages.count, id: \.self) { index in
                             Circle()
                                 .fill(appStore.currentPage == index ? Color.gray : Color.gray.opacity(0.3))
@@ -444,7 +445,8 @@ struct LaunchpadView: View {
                                 }
                         }
                     }
-                    .padding(.bottom, 27) // 向上抬高一点
+                    .padding(.bottom, 12)
+                    .padding(.top, 32)// 向上抬高一点
                     .opacity(isFolderOpen ? 0.1 : 1)
                     .allowsHitTesting(!isFolderOpen)
                 }
@@ -1623,13 +1625,13 @@ struct GridConfig {
         self.isFullscreen = isFullscreen
     }
     
-    var itemsPerPage: Int { 35 }
-    var columns: Int { 7 }
+    var itemsPerPage: Int { 24 }
+    var columns: Int { 6 }
     var rows: Int { 5 }
     
     let maxBounce: CGFloat = 80
     let pageSpacing: CGFloat = 80
-    let rowSpacing: CGFloat = 14
+    let rowSpacing: CGFloat = 32
     let columnSpacing: CGFloat = 20
     
     struct PageNavigation {

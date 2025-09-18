@@ -47,7 +47,7 @@ struct LaunchpadItemButton: View {
 
     var body: some View {
         Button(action: handleTap) {
-            VStack(spacing: 8) {
+            VStack {
                 ZStack {
                     let renderedIcon: NSImage = {
                         switch item {
@@ -77,8 +77,11 @@ struct LaunchpadItemButton: View {
                         RoundedRectangle(cornerRadius: iconSize * 0.18)
                             .foregroundStyle(Color.clear)
                             .frame(width: iconSize * 0.8, height: iconSize * 0.8)
-                            .glassEffect(in: RoundedRectangle(cornerRadius: iconSize * 0.18))
-                            .shadow(color: .black.opacity(0.12), radius: 1, x: 0, y: 0.5)
+                            .glassEffect(in: RoundedRectangle(cornerRadius: iconSize * 0.18, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: iconSize * 0.18, style: .continuous)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            )
                     }
                     
                     Image(nsImage: renderedIcon)
@@ -93,7 +96,7 @@ struct LaunchpadItemButton: View {
 
                 if showLabel {
                     Text(item.name)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .lineLimit(2)
                         .multilineTextAlignment(.center)
                         .truncationMode(.tail)
@@ -103,7 +106,7 @@ struct LaunchpadItemButton: View {
             }
         }
         .buttonStyle(.plain)
-        .padding(8)
+        .padding(12)
         // 关闭悬停时的放大反馈
         .onHover { _ in }
     }

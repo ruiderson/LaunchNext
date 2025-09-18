@@ -24,29 +24,6 @@
               9.546875
             ]
           }
-        },
-        {
-          "blend-mode-specializations" : [
-            {
-              "value" : "screen"
-            },
-            {
-              "appearance" : "tinted",
-              "value" : "normal"
-            }
-          ],
-          "fill" : "automatic",
-          "glass" : true,
-          "hidden" : true,
-          "image-name" : "未命名 2.png",
-          "name" : "未命名 2",
-          "position" : {
-            "scale" : 1.2,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
         }
       ],
       "lighting" : "individual",

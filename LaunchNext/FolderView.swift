@@ -59,9 +59,9 @@ struct FolderView: View {
         }
         .padding()
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        .background(
+            RoundedRectangle(cornerRadius: appStore.isFullscreenMode ? 0 : 30)
+                .fill(.thinMaterial.opacity(0.3))
         )
         .transition(LNAnimations.folderOpenTransition)
         .onTapGesture {

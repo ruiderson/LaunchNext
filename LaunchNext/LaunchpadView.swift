@@ -470,7 +470,7 @@ struct LaunchpadView: View {
         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: appStore.isFullscreenMode ? 0 : 30))
         .background(
             RoundedRectangle(cornerRadius: appStore.isFullscreenMode ? 0 : 30)
-                .fill(.thinMaterial.opacity(0.3))
+                .fill(.thinMaterial.opacity(0.25))
         )
         .ignoresSafeArea()
         .overlay(

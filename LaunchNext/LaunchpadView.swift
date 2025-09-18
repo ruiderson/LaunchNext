@@ -981,12 +981,6 @@ extension LaunchpadView {
         }
 
         if code == 48 { // tab
-            if !isKeyboardNavigationActive {
-                isKeyboardNavigationActive = true
-                setSelectionToPageStart(appStore.currentPage)
-                clampSelection()
-                return nil
-            }
             // 已激活时保留原有翻页行为（Shift 反向）
             let backward = event.modifierFlags.contains(.shift)
             if backward {

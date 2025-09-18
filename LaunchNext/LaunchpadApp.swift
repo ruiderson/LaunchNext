@@ -174,7 +174,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSGestureR
         let frame = screen.visibleFrame
         
         let height = frame.height * 0.72
-        let width = max(height * 1.8, minimumContentSize.width, minimumContentSize.height * 4/3)
+        let width = max(height * 1.7, minimumContentSize.width, minimumContentSize.height * 4/3)
         
         return NSRect(x: frame.midX - width/2, y: frame.midY - height/2, width: width, height: height)
     }

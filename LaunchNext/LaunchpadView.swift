@@ -173,9 +173,14 @@ struct LaunchpadView: View {
     
     private func makePages(from items: [LaunchpadItem]) -> [[LaunchpadItem]] {
         guard !items.isEmpty else { return [] }
-        return stride(from: 0, to: items.count, by: config.itemsPerPage).map { start in
-            let end = min(start + config.itemsPerPage, items.count)
-            return Array(items[start..<end])
+        
+        let valids = items
+            .filter { !$0.id.hasPrefix("empty") }
+            .map { $0 }
+        
+        return stride(from: 0, to: valids.count, by: config.itemsPerPage).map { start in
+            let end = min(start + config.itemsPerPage, valids.count)
+            return Array(valids[start..<end])
         }
     }
     

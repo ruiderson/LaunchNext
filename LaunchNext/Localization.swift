@@ -90,7 +90,7 @@ final class LocalizationManager {
                 .iconSize: "Icon size",
                 .smaller: "Smaller",
                 .larger: "Larger",
-                .predictDrop: "Enable edit",
+                .predictDrop: "Enable edition",
                 .showLabels: "Show labels under icons",
                 .scrollSensitivity: "Scrolling sensitivity",
                 .low: "Low",

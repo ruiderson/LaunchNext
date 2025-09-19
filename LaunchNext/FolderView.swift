@@ -304,122 +304,130 @@ extension FolderView {
 
         let isDraggingThisTile = (draggingApp == app)
 
-        base
-            .opacity(isDraggingThisTile ? 0 : 1)
-            .allowsHitTesting(!isDraggingThisTile)
-            .animation(LNAnimations.springFast, value: isSelected)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 2, coordinateSpace: .named("folderGrid"))
-                    .onChanged { value in
-                        // 在编辑状态下禁用拖拽
-                        if isEditingName { return }
-                        
-                        if draggingApp == nil {
-                            var tx = Transaction(); tx.disablesAnimations = true
-                            withTransaction(tx) { draggingApp = app }
-                            isKeyboardNavigationActive = false // 禁用键盘导航
+        if appStore.enableDropPrediction {
+            base
+                .opacity(isDraggingThisTile ? 0 : 1)
+                .allowsHitTesting(!isDraggingThisTile)
+                .animation(LNAnimations.springFast, value: isSelected)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 2, coordinateSpace: .named("folderGrid"))
+                        .onChanged { value in
+                            // 在编辑状态下禁用拖拽
+                            if isEditingName { return }
+                            
+                            if draggingApp == nil {
+                                var tx = Transaction(); tx.disablesAnimations = true
+                                withTransaction(tx) { draggingApp = app }
+                                isKeyboardNavigationActive = false // 禁用键盘导航
 
-                            // 让拖拽预览中心与指针位置一致，避免任何偏移
+                                // 让拖拽预览中心与指针位置一致，避免任何偏移
+                                dragPreviewPosition = value.location
+                            }
+
+                            // 预览跟随指针位置（不引入起始偏移），确保光标与图标中心对齐
                             dragPreviewPosition = value.location
-                        }
 
-                        // 预览跟随指针位置（不引入起始偏移），确保光标与图标中心对齐
-                        dragPreviewPosition = value.location
-
-                        // 检测是否拖出文件夹范围并驻留
-                        let isOutside: Bool = (value.location.x < 0 || value.location.y < 0 ||
-                                               value.location.x > containerSize.width ||
-                                               value.location.y > containerSize.height)
-                        let now = Date()
-                        if isOutside {
-                            if outOfBoundsBeganAt == nil { outOfBoundsBeganAt = now }
-                            if !hasHandedOffDrag, let start = outOfBoundsBeganAt, now.timeIntervalSince(start) >= outOfBoundsDwell, let dragging = draggingApp {
-                                // 接力到外层：将应用移出文件夹并关闭文件夹
-                                hasHandedOffDrag = true
-                                pendingDropIndex = nil
-                                appStore.handoffDraggingApp = dragging
-                                appStore.handoffDragScreenLocation = NSEvent.mouseLocation
-                                appStore.removeAppFromFolder(dragging, folder: folder)
-                                // 清理内部拖拽状态并关闭文件夹
-                                draggingApp = nil
-                                outOfBoundsBeganAt = nil
-                                withAnimation(LNAnimations.springFast) {
-                                    onClose()
+                            // 检测是否拖出文件夹范围并驻留
+                            let isOutside: Bool = (value.location.x < 0 || value.location.y < 0 ||
+                                                   value.location.x > containerSize.width ||
+                                                   value.location.y > containerSize.height)
+                            let now = Date()
+                            if isOutside {
+                                if outOfBoundsBeganAt == nil { outOfBoundsBeganAt = now }
+                                if !hasHandedOffDrag, let start = outOfBoundsBeganAt, now.timeIntervalSince(start) >= outOfBoundsDwell, let dragging = draggingApp {
+                                    // 接力到外层：将应用移出文件夹并关闭文件夹
+                                    hasHandedOffDrag = true
+                                    pendingDropIndex = nil
+                                    appStore.handoffDraggingApp = dragging
+                                    appStore.handoffDragScreenLocation = NSEvent.mouseLocation
+                                    appStore.removeAppFromFolder(dragging, folder: folder)
+                                    // 清理内部拖拽状态并关闭文件夹
+                                    draggingApp = nil
+                                    outOfBoundsBeganAt = nil
+                                    withAnimation(LNAnimations.springFast) {
+                                        onClose()
+                                    }
+                                    return
                                 }
+                            } else {
+                                outOfBoundsBeganAt = nil
+                            }
+
+                            if let hoveringIndex = indexAt(point: dragPreviewPosition,
+                                                           containerSize: containerSize,
+                                                           columnWidth: columnWidth,
+                                                           appHeight: appHeight) {
+                                // 将"悬停在最后一个格子"视为插入到末尾，从而推动最后一个向前让位
+                                let count = visualApps.count
+                                if count > 0,
+                                   hoveringIndex == count - 1,
+                                   let dragging = draggingApp,
+                                   dragging != visualApps[hoveringIndex] {
+                                    pendingDropIndex = count // 末尾插槽
+                                } else {
+                                    // 若命中的是"末尾插槽"（== count），保持为 count；其余为格子索引
+                                    pendingDropIndex = hoveringIndex
+                                }
+                            } else {
+                                pendingDropIndex = nil
+                            }
+                        }
+                        .onEnded { _ in
+                            // 在编辑状态下不处理拖拽结束
+                            if isEditingName { return }
+                            
+                            guard let dragging = draggingApp else { return }
+                            defer {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+                                    draggingApp = nil
+                                    pendingDropIndex = nil
+                                    // 拖拽结束后不自动恢复键盘导航，保持一致体验
+                                }
+                            }
+
+                            // 若已接力到外层，则不在此处处理落点
+                            if hasHandedOffDrag {
+                                hasHandedOffDrag = false
+                                outOfBoundsBeganAt = nil
                                 return
                             }
-                        } else {
-                            outOfBoundsBeganAt = nil
-                        }
 
-                        if let hoveringIndex = indexAt(point: dragPreviewPosition,
-                                                       containerSize: containerSize,
-                                                       columnWidth: columnWidth,
-                                                       appHeight: appHeight) {
-                            // 将"悬停在最后一个格子"视为插入到末尾，从而推动最后一个向前让位
-                            let count = visualApps.count
-                            if count > 0,
-                               hoveringIndex == count - 1,
-                               let dragging = draggingApp,
-                               dragging != visualApps[hoveringIndex] {
-                                pendingDropIndex = count // 末尾插槽
-                            } else {
-                                // 若命中的是"末尾插槽"（== count），保持为 count；其余为格子索引
-                                pendingDropIndex = hoveringIndex
-                            }
-                        } else {
-                            pendingDropIndex = nil
-                        }
-                    }
-                    .onEnded { _ in
-                        // 在编辑状态下不处理拖拽结束
-                        if isEditingName { return }
-                        
-                        guard let dragging = draggingApp else { return }
-                        defer {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                                draggingApp = nil
-                                pendingDropIndex = nil
-                                // 拖拽结束后不自动恢复键盘导航，保持一致体验
-                            }
-                        }
-
-                        // 若已接力到外层，则不在此处处理落点
-                        if hasHandedOffDrag {
-                            hasHandedOffDrag = false
-                            outOfBoundsBeganAt = nil
-                            return
-                        }
-
-                        if let finalIndex = pendingDropIndex {
-                            // 视觉吸附位置：直接使用finalIndex，确保准确吸附到目标位置
-                            let dropDisplayIndex = finalIndex
-                            let targetCenter = cellCenter(for: dropDisplayIndex,
-                                                          containerSize: containerSize,
-                                                          columnWidth: columnWidth,
-                                                          appHeight: appHeight)
-                            withAnimation(LNAnimations.dragPreview) {
-                                dragPreviewPosition = targetCenter
-                                dragPreviewScale = 1.0
-                            }
-                            if let from = folder.apps.firstIndex(of: dragging) {
-                                var apps = folder.apps
-                                apps.remove(at: from)
-                                // 与视觉预览完全一致：直接使用悬停索引
-                                let insertIndex = finalIndex
-                                let clamped = min(max(0, insertIndex), apps.count)
-                                apps.insert(dragging, at: clamped)
-                                folder.apps = apps
-                                appStore.saveAllOrder()
-                                
-                                // 文件夹内拖拽结束后也触发压缩，确保主界面的empty项目移动到页面末尾
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    appStore.compactItemsWithinPages()
+                            if let finalIndex = pendingDropIndex {
+                                // 视觉吸附位置：直接使用finalIndex，确保准确吸附到目标位置
+                                let dropDisplayIndex = finalIndex
+                                let targetCenter = cellCenter(for: dropDisplayIndex,
+                                                              containerSize: containerSize,
+                                                              columnWidth: columnWidth,
+                                                              appHeight: appHeight)
+                                withAnimation(LNAnimations.dragPreview) {
+                                    dragPreviewPosition = targetCenter
+                                    dragPreviewScale = 1.0
+                                }
+                                if let from = folder.apps.firstIndex(of: dragging) {
+                                    var apps = folder.apps
+                                    apps.remove(at: from)
+                                    // 与视觉预览完全一致：直接使用悬停索引
+                                    let insertIndex = finalIndex
+                                    let clamped = min(max(0, insertIndex), apps.count)
+                                    apps.insert(dragging, at: clamped)
+                                    folder.apps = apps
+                                    appStore.saveAllOrder()
+                                    
+                                    // 文件夹内拖拽结束后也触发压缩，确保主界面的empty项目移动到页面末尾
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        appStore.compactItemsWithinPages()
+                                    }
                                 }
                             }
                         }
-                    }
-            )
+                )
+        } else {
+            // 当禁用 drop prediction 时，不附加拖拽手势 —— 点击启动仍正常
+            base
+                .opacity(1)
+                .allowsHitTesting(true)
+                .animation(LNAnimations.springFast, value: isSelected)
+        }
     }
 }
 

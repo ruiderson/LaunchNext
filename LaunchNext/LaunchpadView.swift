@@ -358,7 +358,7 @@ struct LaunchpadView: View {
                                 }
                             }
                             .offset(x: hStackOffset)
-                            .opacity(isFolderOpen ? 0.6 : 1)
+                            .opacity(1)
                             .allowsHitTesting(!isFolderOpen)
                             
 
@@ -453,7 +453,7 @@ struct LaunchpadView: View {
                     }
                     .padding(.bottom, 12)
                     .padding(.top, 32)// 向上抬高一点
-                    .opacity(isFolderOpen ? 0.1 : 1)
+                    .opacity(1)
                     .allowsHitTesting(!isFolderOpen)
                 }
                 
@@ -490,8 +490,8 @@ struct LaunchpadView: View {
 
                 // 半透明背景：仅在文件夹打开时插入，使用淡入淡出过渡
                 if isFolderOpen {
-                    Color.black
-                        .opacity(0.1)
+                    Color.clear
+                        .contentShape(Rectangle())
                         .ignoresSafeArea()
                         .transition(.opacity)
                         .onTapGesture {

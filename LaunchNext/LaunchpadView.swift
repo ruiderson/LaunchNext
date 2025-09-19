@@ -701,6 +701,7 @@ struct LaunchpadView: View {
     // MARK: - Handoff drag from folder
     private func startHandoffDragIfNeeded(geo: GeometryProxy, columnWidth: CGFloat, appHeight: CGFloat, iconSize: CGFloat) {
         guard draggingItem == nil, let app = appStore.handoffDraggingApp else { return }
+        guard appStore.enableDropPrediction else { return }
         // 更新几何上下文
         captureGridGeometry(geo, columnWidth: columnWidth, appHeight: appHeight, iconSize: iconSize)
 
@@ -1153,7 +1154,7 @@ extension LaunchpadView {
             .id(item.id)
 
 
-            if appStore.searchText.isEmpty && !isFolderOpen {
+            if appStore.searchText.isEmpty && !isFolderOpen && appStore.enableDropPrediction {
                 let isDraggingThisTile = (draggingItem == item)
 
                 base

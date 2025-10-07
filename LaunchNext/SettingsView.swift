@@ -1379,7 +1379,7 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(appStore.localized(.iconSize))
                         .font(.headline)
-                    Slider(value: $appStore.iconScale, in: 0.8...1.1)
+                    Slider(value: $appStore.iconScale, in: 0.6...1.1)
                     HStack {
                         Text(appStore.localized(.smaller)).font(.footnote)
                         Spacer()

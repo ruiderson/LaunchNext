@@ -65,6 +65,38 @@ struct AppInfo: Identifiable, Equatable, Hashable {
             }
         }
 
+        // Prefer system-level localized names (Finder / Launch Services) first
+        let resourceValues = try? url.resourceValues(forKeys: [.localizedNameKey])
+        consider(resourceValues?.localizedName, source: "resourceValues.localizedName")
+        
+        if let components = FileManager.default.componentsToDisplay(forPath: url.path) {
+            consider(components.last, source: "FileManager.componentsToDisplay.last")
+        }
+        
+        var unmanagedName: Unmanaged<CFString>?
+        let lsStatus = LSCopyDisplayNameForURL(url as CFURL, &unmanagedName)
+        if lsStatus == noErr, let cfName = unmanagedName?.takeRetainedValue() as String? {
+            consider(cfName, source: "LSCopyDisplayNameForURL")
+        }
+        
+        consider(FileManager.default.displayName(atPath: url.path), source: "FileManager.displayName")
+        
+        // Spotlight metadata (can carry localized display labels)
+        if let metadataItem = NSMetadataItem(url: url) {
+            if let displayName = metadataItem.value(forAttribute: kMDItemDisplayName as String) as? String {
+                consider(displayName, source: "MDItemDisplayName")
+            }
+            let alternateNamesKey = "kMDItemAlternateNames"
+            if let alternatesValue = metadataItem.value(forAttribute: alternateNamesKey) {
+                if let names = alternatesValue as? [String] {
+                    for name in names { consider(name, source: "MDItemAlternateNames") }
+                } else if let names = alternatesValue as? NSArray {
+                    for case let name as String in names { consider(name, source: "MDItemAlternateNames") }
+                }
+            }
+        }
+        
+        // Finally, fall back to bundle-provided display names if system/metadata didn't yield
         if let bundle {
             consider(bundlePreferredDisplayName(bundle), source: "BundlePreferredDisplayName")
         }

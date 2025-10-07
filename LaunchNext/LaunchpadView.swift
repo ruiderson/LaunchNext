@@ -1857,18 +1857,20 @@ extension LaunchpadView {
                               isPrecise: Bool,
                               pageWidth: CGFloat) {
         guard !isFolderOpen else { return }
-        // Mouse wheel (non-precise): accumulate distance; apply small cooldown to avoid multi-page flips
-        if !isPrecise {
-            // Map vertical wheel to horizontal direction like precise scroll
-            let primaryDelta = abs(deltaX) >= abs(deltaY) ? deltaX : -deltaY
-            if primaryDelta == 0 { return }
-            let direction = primaryDelta > 0 ? 1 : -1
+        // Treat as trackpad only if the event has a gesture phase
+        let treatAsTrackpad = isPrecise && !phase.isEmpty
+        if !treatAsTrackpad {
+            // Use horizontal delta only (Shift+vertical is mapped upstream)
+            let primaryDelta = deltaX
+            // Attenuate the wheel delta to reduce sensitivity
+            let effectiveDelta = primaryDelta * config.pageNavigation.wheelDeltaAttenuation
+            if effectiveDelta == 0 { return }
+            let direction = effectiveDelta > 0 ? 1 : -1
             if wheelLastDirection != direction { wheelAccumulatedSinceFlip = 0 }
             wheelLastDirection = direction
-            wheelAccumulatedSinceFlip += abs(primaryDelta)
-            let baselineSensitivity = max(AppStore.defaultScrollSensitivity, 0.0001)
-            let relativeSensitivity = max(appStore.scrollSensitivity, 0.0001) / baselineSensitivity
-            let threshold: CGFloat = 2.0 / CGFloat(relativeSensitivity) // 根据灵敏度调整鼠标滚轮阈值
+            wheelAccumulatedSinceFlip += abs(effectiveDelta)
+            let threshold: CGFloat = max(config.pageNavigation.wheelFlipBaseThreshold,
+                                         2.0 / CGFloat(appStore.scrollSensitivity / 0.15))
             let now = Date()
             if wheelAccumulatedSinceFlip >= threshold {
                 if let last = wheelLastFlipAt, now.timeIntervalSince(last) < wheelFlipCooldown { return }
@@ -1883,7 +1885,10 @@ extension LaunchpadView {
         // Trackpad precise scroll: accumulate and flip after threshold
         // Ignore momentum phase to ensure only one flip per gesture
         if isMomentum { return }
-        let delta = abs(deltaX) >= abs(deltaY) ? deltaX : -deltaY // vertical swipes map to horizontal
+        // Only react to horizontal gestures on trackpads
+        if phase.isEmpty { return } // defensive: ignore wheel-like events misclassified as precise
+        let delta = deltaX
+        if delta == 0 { return }
         switch phase {
         case .began:
             isUserSwiping = true
@@ -1893,10 +1898,9 @@ extension LaunchpadView {
             accumulatedScrollX += delta
         case .ended, .cancelled:
             // 使灵敏度越大阈值越小，以符合直觉（与鼠标滚轮一致）
-            // 归一到默认值：threshold = pageWidth * (baseline^2 / sensitivity)
-            // 当 sensitivity=baseline 时，阈值为 baseline*pageWidth；越大则更灵敏（阈值更小）
-            let baselineSensitivity = max(AppStore.defaultScrollSensitivity, 0.001)
-            let threshold = pageWidth * ((baselineSensitivity * baselineSensitivity) / max(appStore.scrollSensitivity, 0.001))
+            // 归一到默认值 0.15：threshold = pageWidth * (0.0225 / sensitivity)
+            // 当 sensitivity=0.15 时，阈值为 0.15*pageWidth；越大则更灵敏（阈值更小）
+            let threshold = pageWidth * (0.0225 / max(appStore.scrollSensitivity, 0.001)) * config.pageNavigation.trackpadFlipMultiplier
             if accumulatedScrollX <= -threshold {
                 navigateToNextPage()
             } else if accumulatedScrollX >= threshold {
@@ -1935,12 +1939,18 @@ struct ScrollEventCatcher: NSViewRepresentable {
             // Prefer primary phase; fallback to momentum
             let phase = event.phase != [] ? event.phase : event.momentumPhase
             let isMomentum = event.momentumPhase != []
-            let isPreciseOrTrackpad = event.hasPreciseScrollingDeltas || event.phase != [] || event.momentumPhase != []
-            onScroll?(event.scrollingDeltaX,
+            // Consider as "trackpad/gesture" only if there is a phase (many mice report precise deltas without phases)
+            let isGestural = (event.phase != [] || event.momentumPhase != [])
+            let shiftScrolling = event.modifierFlags.contains(.shift)
+            let mappedDeltaX: CGFloat = {
+                if event.scrollingDeltaX != 0 { return event.scrollingDeltaX }
+                return shiftScrolling ? event.scrollingDeltaY : 0
+            }()
+            onScroll?(mappedDeltaX,
                       event.scrollingDeltaY,
                       phase,
                       isMomentum,
-                      isPreciseOrTrackpad)
+                      isGestural)
         }
 
         override func viewDidMoveToWindow() {
@@ -1950,12 +1960,17 @@ struct ScrollEventCatcher: NSViewRepresentable {
             eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
                 let phase = event.phase != [] ? event.phase : event.momentumPhase
                 let isMomentum = event.momentumPhase != []
-                let isPreciseOrTrackpad = event.hasPreciseScrollingDeltas || event.phase != [] || event.momentumPhase != []
-                self?.onScroll?(event.scrollingDeltaX,
+                let isGestural = (event.phase != [] || event.momentumPhase != [])
+                let shiftScrolling = event.modifierFlags.contains(.shift)
+                let mappedDeltaX: CGFloat = {
+                    if event.scrollingDeltaX != 0 { return event.scrollingDeltaX }
+                    return shiftScrolling ? event.scrollingDeltaY : 0
+                }()
+                self?.onScroll?(mappedDeltaX,
                                 event.scrollingDeltaY,
                                 phase,
                                 isMomentum,
-                                isPreciseOrTrackpad)
+                                isGestural)
                 return event
             }
         }
@@ -2138,6 +2153,10 @@ struct GridConfig {
         let autoFlipInterval: TimeInterval = 0.8 // 拖拽贴边翻页两次之间间隔0.8秒
         let scrollPageThreshold: CGFloat = 0.75
         let scrollFinishThreshold: CGFloat = 0.5
+        // Scrolling behavior tuning
+        let wheelDeltaAttenuation: CGFloat = 0.6         // scales down mouse wheel delta to avoid oversensitivity
+        let wheelFlipBaseThreshold: CGFloat = 12.0       // minimum accumulation before a flip on mouse wheels
+        let trackpadFlipMultiplier: CGFloat = 1.0        // multiplier applied to trackpad threshold
     }
     
     let pageNavigation = PageNavigation()

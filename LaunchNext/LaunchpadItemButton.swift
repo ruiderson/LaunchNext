@@ -117,7 +117,7 @@ private struct LaunchpadItemButtonContent: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
             ZStack {
                 let renderedIcon: NSImage = {
                     switch item {

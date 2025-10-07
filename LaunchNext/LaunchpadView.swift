@@ -363,6 +363,12 @@ struct LaunchpadView: View {
                 // 保持原有上下留白，去掉可见的分割线
                 Spacer()
                     .frame(height: 16)
+                
+                Divider()
+                    .foregroundStyle(.placeholder)
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
+                    .opacity(isFolderOpen ? 0.6 : 1)
 
                 GeometryReader { geo in
                     let appCountPerRow = config.columns

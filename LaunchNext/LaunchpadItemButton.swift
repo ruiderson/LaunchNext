@@ -151,7 +151,10 @@ private struct LaunchpadItemButtonContent: View {
                         .foregroundStyle(Color.clear)
                         .frame(width: iconSize * 0.8, height: iconSize * 0.8)
                         .liquidGlass(in: RoundedRectangle(cornerRadius: iconSize * 0.18))
-                        .shadow(color: .black.opacity(0.12), radius: 1, x: 0, y: 0.5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: iconSize * 0.18, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        )
                 }
 
                 Image(nsImage: renderedIcon)

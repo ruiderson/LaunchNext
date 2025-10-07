@@ -357,7 +357,6 @@ struct LaunchpadView: View {
                         }
                     }
                 )
-                .opacity(isFolderOpen ? 0.1 : 1)
                 .allowsHitTesting(!isFolderOpen)
                 
                 // 保持原有上下留白，去掉可见的分割线
@@ -368,7 +367,6 @@ struct LaunchpadView: View {
                     .foregroundStyle(.placeholder)
                     .padding(.top, 16)
                     .padding(.bottom, 20)
-                    .opacity(isFolderOpen ? 0.6 : 1)
 
                 GeometryReader { geo in
                     let appCountPerRow = config.columns
@@ -467,7 +465,6 @@ struct LaunchpadView: View {
                                 }
                             }
                             .offset(x: hStackOffset)
-                            .opacity(isFolderOpen ? 0.1 : 1)
                             .allowsHitTesting(!isFolderOpen)
                             
 
@@ -558,7 +555,7 @@ struct LaunchpadView: View {
                         }
                     }
                     .padding(.bottom, CGFloat(appStore.pageIndicatorOffset))
-                    .opacity(isFolderOpen ? 0.1 : 1)
+                    .opacity(1)
                     .allowsHitTesting(!isFolderOpen)
                 }
                 
